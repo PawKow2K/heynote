@@ -38,6 +38,9 @@ Available for Mac, Windows, and Linux.
 
 [Documentation](https://heynote.com/docs/) is available on the Heynote website.
 
+## About This Fork
+This fork will include a simple multi-buffer system similar to tabs in Notepad++. I decided I need this feature to use the app efficiently, and other options include too many things that in my opinion negatively impact the desired simplicity of the editor.
+
 ## Development
 
 To develop Heynote you need Node.js and you should (hopefully) just need to check out the code and then run:
