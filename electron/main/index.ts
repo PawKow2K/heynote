@@ -9,7 +9,7 @@ import CONFIG from "../config"
 import { isDev, isLinux, isMac, isWindows } from '../detect-platform';
 import { initializeAutoUpdate, checkForUpdates } from './auto-update';
 import { fixElectronCors } from './cors';
-import { loadBuffer, contentSaved } from './buffer';
+import { loadBuffers, contentSaved, Buffer } from './buffer';
 
 
 // The built directory structure
@@ -349,8 +349,7 @@ ipcMain.handle('dark-mode:set', (event, mode) => {
 ipcMain.handle('dark-mode:get', () => nativeTheme.themeSource)
 
 // load buffer on app start
-loadBuffer()
-
+loadBuffers()
 
 ipcMain.handle('settings:set', async (event, settings) => {
     if (settings.keymap !== CONFIG.get("settings.keymap")) {
@@ -378,9 +377,10 @@ ipcMain.handle('settings:set', async (event, settings) => {
         registerAlwaysOnTop()
     }
     if (bufferPathChanged) {
-        const buffer = loadBuffer()
-        if (buffer.exists()) {
-            win?.webContents.send("buffer-content:change", await buffer.load())
+        const buffers = loadBuffers() as Record<string, Buffer>
+        const buf = Object.entries(buffers)[0]
+        if (buf[1].exists()) {
+            win?.webContents.send("buffer-content:change", buf[0], await buf[1].load())
         }
     }
 })

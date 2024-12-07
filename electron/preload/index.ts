@@ -46,16 +46,16 @@ contextBridge.exposeInMainWorld("heynote", {
     },
 
     buffer: {
-        async load() {
-            return await ipcRenderer.invoke("buffer-content:load")
+        async load(bufferName) {
+            return await ipcRenderer.invoke("buffer-content:load", bufferName)
         },
 
-        async save(content) {
-            return await ipcRenderer.invoke("buffer-content:save", content)
+        async save(bufferName, content) {
+            return await ipcRenderer.invoke("buffer-content:save", bufferName, content)
         },
 
-        async saveAndQuit(content) {
-            return await ipcRenderer.invoke("buffer-content:saveAndQuit", content)
+        async saveAndQuit(bufferName, content) {
+            return await ipcRenderer.invoke("buffer-content:saveAndQuit", bufferName, content)
         },
 
         onChangeCallback(callback) {
@@ -64,7 +64,11 @@ contextBridge.exposeInMainWorld("heynote", {
 
         async selectLocation() {
             return await ipcRenderer.invoke("buffer-content:selectLocation")
-        }
+        },
+
+        async getAll() {
+            return await ipcRenderer.invoke("buffer-content:all")
+        },
     },
 
     settings: CONFIG.get("settings"),

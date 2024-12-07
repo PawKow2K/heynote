@@ -36,7 +36,8 @@ function getKeymapExtensions(editor, keymap) {
 export class HeynoteEditor {
     constructor({
         element, 
-        content, 
+        loadedBuffers, 
+        active, 
         focus=true, 
         theme="light", 
         saveFunction=null, 
@@ -61,9 +62,13 @@ export class HeynoteEditor {
         this.fontTheme = new Compartment
         this.defaultBlockToken = "text"
         this.defaultBlockAutoDetect = true
+        this.active = active
+        this.loadedBuffers = loadedBuffers
+
+        console.log(loadedBuffers);
 
         const state = EditorState.create({
-            doc: content || "",
+            doc: (loadedBuffers[active] || ""),
             extensions: [
                 this.keymapCompartment.of(getKeymapExtensions(this, keymap)),
                 heynoteCopyCut(this),
@@ -133,7 +138,8 @@ export class HeynoteEditor {
         return this.view.state.sliceDoc()
     }
 
-    setContent(content) {
+    setContent(bufferName, content) {
+        this.active = bufferName
         this.view.dispatch({
             changes: {
                 from: 0,

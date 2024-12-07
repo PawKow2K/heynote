@@ -56,19 +56,25 @@
                 this.$emit("openLanguageSelector")
             })
 
-            // load buffer content and create editor
-            window.heynote.buffer.load().then((content) => {
-                let diskContent = content
+            // load content of buffers and create editor
+            window.heynote.buffer.getAll().then((buffersList) => {
+                let diskContent = Object.fromEntries(buffersList)
+
                 this.editor = new HeynoteEditor({
                     element: this.$refs.editor,
-                    content: content,
+                    loadedBuffers: Object.fromEntries(buffersList),
+                    active: buffersList[0][0],
                     theme: this.theme,
                     saveFunction: (content) => {
-                        if (content === diskContent) {
-                            return
+                        let bufferName = this.active
+                        if (bufferName in diskContent)
+                        {
+                            if (content === diskContent[bufferName]) {
+                                return
+                            }
+                            diskContent[bufferName] = content
+                            window.heynote.buffer.save(bufferName, content)
                         }
-                        diskContent = content
-                        window.heynote.buffer.save(content)
                     },
                     keymap: this.keymap,
                     emacsMetaKey: this.emacsMetaKey,
@@ -83,15 +89,16 @@
                 this.editor.setDefaultBlockLanguage(this.defaultBlockLanguage, this.defaultBlockLanguageAutoDetect)
 
                 // set up buffer change listener
-                window.heynote.buffer.onChangeCallback((event, content) => {
-                    diskContent = content
-                    this.editor.setContent(content)
+                window.heynote.buffer.onChangeCallback((event, bufferName, content) => {
+                    diskContent[bufferName] = content
+                    this.editor.setContent(bufferName, content)
                 })
             })
             // set up window close handler that will save the buffer and quit
             window.heynote.onWindowClose(() => {
-                window.heynote.buffer.saveAndQuit(this.editor.getContent())
-            })
+                window.heynote.buffer.saveAndQuit(
+                    this.editor.active, this.editor.getContent()
+                )})
 
             // if debugSyntaxTree prop is set, display syntax tree for debugging
             if (this.debugSyntaxTree) {

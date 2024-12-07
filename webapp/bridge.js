@@ -80,22 +80,26 @@ const Heynote = {
     defaultFontSize: isMobileDevice ? 16 : 12,
 
     buffer: {
-        async load() {
-            const content = localStorage.getItem("buffer")
+        async load(bufferName) {
+            const content = localStorage.getItem(`buffer-${bufferName}`)
             return content === null ? "\n∞∞∞text-a\n" : content
         },
 
-        async save(content) {
-            localStorage.setItem("buffer", content)
+        async save(bufferName, content) {
+            localStorage.setItem(`buffer-${bufferName}`, content)
         },
 
-        async saveAndQuit(content) {
+        async saveAndQuit(bufferName, content) {
             
         },
 
         onChangeCallback(callback) {
             
         },
+
+        async getAll() {
+            return "\n∞∞∞text-a\n"
+        }
     },
 
     onWindowClose(callback) {

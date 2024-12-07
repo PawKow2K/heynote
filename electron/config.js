@@ -55,6 +55,14 @@ const schema = {
             timeFetched: {type: "number"},
         },
     },
+
+    buffers: {
+        type: "array",
+        items: {
+            type: "string"
+        },
+        default: ["0"],
+    },
 }
 
 const defaults = {
@@ -74,6 +82,7 @@ const defaults = {
         bracketClosing: false,
     },
     theme: "system",
+    buffers: ["0"],
 }
 
 export default new Store({schema, defaults, name: isDev ? "config-dev" : "config"})

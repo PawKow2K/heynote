@@ -16,15 +16,15 @@ const untildify = (pathWithTilde) => {
       : pathWithTilde;
 }
 
-export function constructBufferFilePath(directoryPath) {
-    return join(untildify(directoryPath), isDev ? "buffer-dev.txt" : "buffer.txt")
+export function constructBufferFilePath(directoryPath, suffix) {
+    return join(untildify(directoryPath), isDev ? `buffer-dev-${suffix}.txt` : `buffer-${suffix}.txt`)
 }
 
-export function getBufferFilePath() {
+export function getBufferFilePath(suffix) {
     let defaultPath = app.getPath("userData")
     let configPath = CONFIG.get("settings.bufferPath")
     let bufferPath = configPath.length ? configPath : defaultPath
-    let bufferFilePath = constructBufferFilePath(bufferPath)
+    let bufferFilePath = constructBufferFilePath(bufferPath, suffix)
     try {
         // use realpathSync to resolve a potential symlink
         return fs.realpathSync(bufferFilePath)
@@ -39,7 +39,8 @@ export function getBufferFilePath() {
 
 
 export class Buffer {
-    constructor({filePath, onChange}) {
+    constructor({name, filePath, onChange}) {
+        this.name = name
         this.filePath = filePath
         this.onChange = onChange
         this.watcher = null
@@ -50,7 +51,7 @@ export class Buffer {
     async load() {
         const content = await jetpack.read(this.filePath, 'utf8')
         this.setupWatcher()
-        return content
+        return [this.name, content]
     }
 
     async save(content) {
@@ -103,39 +104,54 @@ export class Buffer {
 
 
 // Buffer
-let buffer
-export function loadBuffer() {
-    if (buffer) {
-        buffer.close()
-    }
-    buffer = new Buffer({
-        filePath: getBufferFilePath(),
+let buffers = {}
+export function loadBuffer(suffix) {
+    let buffer = new Buffer({
+        name: suffix,
+        filePath: getBufferFilePath(suffix),
         onChange: (content) => {
-            win?.webContents.send("buffer-content:change", content)
+            win?.webContents.send("buffer-content:change", suffix, content)
         },
     })
     return buffer
 }
 
-ipcMain.handle('buffer-content:load', async () => {
-    if (buffer.exists() && !(eraseInitialContent && isDev)) {
-        return await buffer.load()
+export function loadBuffers() {
+    if (Object.keys(buffers).length > 0)
+    {
+        for (let bufferName in buffers)
+        {
+            buffers[bufferName].close()
+        }
+    }
+    let buffersToLoad = CONFIG.get('buffers')
+    buffersToLoad.forEach(suffix => {
+        buffers[suffix] = loadBuffer(suffix)
+    })
+
+    return buffers
+}
+
+ipcMain.handle('buffer-content:load', async (event, bufferName) => {
+    console.log("XD")
+    if (buffers[bufferName].exists() && !(eraseInitialContent && isDev)) {
+        return await buffers[bufferName].load()
     } else {
         return isDev ? initialDevContent : initialContent
     }
 });
 
-async function save(content) {
-    return await buffer.save(content)
+async function save(bufferName, content) {
+    return await buffers[bufferName].save(content)
 }
 
-ipcMain.handle('buffer-content:save', async (event, content) => {
-    return await save(content)
+ipcMain.handle('buffer-content:save', async (event, bufferName, content) => {
+    return await save(bufferName, content)
 });
 
 export let contentSaved = false
-ipcMain.handle('buffer-content:saveAndQuit', async (event, content) => {
-    await save(content)
+ipcMain.handle('buffer-content:saveAndQuit', async (event, bufferName, content) => {
+    await save(bufferName, content)
     contentSaved = true
     app.quit()
 })
@@ -153,7 +169,7 @@ ipcMain.handle("buffer-content:selectLocation", async () => {
         return
     }
     const filePath = result.filePaths[0]
-    if (fs.existsSync(constructBufferFilePath(filePath))) {
+    if (fs.existsSync(constructBufferFilePath(filePath, '0'))) {
         if (dialog.showMessageBoxSync({
             type: "question",
             message: "The selected directory already contains a buffer file. It will be loaded. Do you want to continue?",
@@ -163,4 +179,8 @@ ipcMain.handle("buffer-content:selectLocation", async () => {
         }
     }
     return filePath
+})
+
+ipcMain.handle('buffer-content:all', async () => {
+    return await Promise.all(Object.entries(buffers).map(async ([_, b]) => await b.load()))
 })
