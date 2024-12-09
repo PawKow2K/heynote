@@ -38,6 +38,7 @@
         data() {
             return {
                 syntaxTreeDebugContent: null,
+                tabButtons: [],
             }
         },
 
@@ -66,7 +67,7 @@
                     active: buffersList[0][0],
                     theme: this.theme,
                     saveFunction: (content) => {
-                        let bufferName = this.active
+                        let bufferName = this.editor.active
                         if (bufferName in diskContent)
                         {
                             if (content === diskContent[bufferName]) {
@@ -88,12 +89,21 @@
                 window.document.addEventListener("currenciesLoaded", this.onCurrenciesLoaded)
                 this.editor.setDefaultBlockLanguage(this.defaultBlockLanguage, this.defaultBlockLanguageAutoDetect)
 
-                // set up buffer change listener
+                // set up buffer change listeners
                 window.heynote.buffer.onChangeCallback((event, bufferName, content) => {
                     diskContent[bufferName] = content
                     this.editor.setContent(bufferName, content)
                 })
+
+                // set up tabs for buffers
+                this.tabButtons = buffersList.map(([key, _]) =>
+                    ({
+                        label: key,
+                        action: () => this.editor.changeBuffer(key)
+                    })
+                )
             })
+
             // set up window close handler that will save the buffer and quit
             window.heynote.onWindowClose(() => {
                 window.heynote.buffer.saveAndQuit(
@@ -191,6 +201,15 @@
 
 <template>
     <div>
+        <div class="tabs" ref="tabs">
+            <button
+                v-for="(button, index) in tabButtons"
+                :key="index"
+                @click="button.action"
+            >
+                {{ button.label }}
+            </button>
+        </div>
         <div class="editor" ref="editor"></div>
         <div 
             v-if="debugSyntaxTree"

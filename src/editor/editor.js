@@ -114,6 +114,11 @@ export class HeynoteEditor {
             window.addEventListener("beforeunload", () => {
                 saveFunction(this.getContent())
             })
+
+            window.addEventListener("tabchange", () => {
+                this.loadedBuffers[this.active] = this.getContent()
+                saveFunction(this.getContent())
+            })
         }
 
         this.view = new EditorView({
@@ -232,6 +237,14 @@ export class HeynoteEditor {
 
     currenciesLoaded() {
         triggerCurrenciesLoaded(this.view.state, this.view.dispatch)
+    }
+
+    changeBuffer(name) {
+        if (name in this.loadedBuffers)
+        {
+            window.dispatchEvent(new Event("tabchange"))
+            this.setContent(name, this.loadedBuffers[name])
+        }
     }
 }
 
