@@ -16,6 +16,9 @@ import {
     selectNextParagraph, selectPreviousParagraph,
     newCursorBelow, newCursorAbove,
 } from "./block/commands.js"
+import {
+    newTab,
+} from "./tab/commands.js"
 import { pasteCommand, copyCommand, cutCommand } from "./copy-paste.js"
 
 import { formatBlockContent } from "./block/format-code.js"
@@ -66,5 +69,6 @@ export function heynoteKeymap(editor) {
         {key:"Mod-ArrowDown", run:gotoNextBlock, shift:selectNextBlock},
         {key:"Ctrl-ArrowUp", run:gotoPreviousParagraph, shift:selectPreviousParagraph},
         {key:"Ctrl-ArrowDown", run:gotoNextParagraph, shift:selectNextParagraph},
+        ["Mod-t", newTab(editor)],
     ])
 }

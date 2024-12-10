@@ -91,17 +91,29 @@
 
                 // set up buffer change listeners
                 window.heynote.buffer.onChangeCallback((event, bufferName, content) => {
+                    if (!(bufferName in diskContent))
+                    {
+                        this.tabButtons.push({
+                            label: bufferName,
+                            action: () => this.editor.changeBuffer(bufferName)
+                        })
+                    }
                     diskContent[bufferName] = content
                     this.editor.setContent(bufferName, content)
                 })
 
                 // set up tabs for buffers
-                this.tabButtons = buffersList.map(([key, _]) =>
+                this.tabButtons = buffersList.map(([name, _]) =>
                     ({
-                        label: key,
-                        action: () => this.editor.changeBuffer(key)
+                        label: name,
+                        action: () => this.editor.changeBuffer(name)
                     })
                 )
+
+                this.$refs.editor.addEventListener("newTab", (e) => {
+                    let name = this.editor.getNewName()
+                    window.heynote.buffer.newBuffer(name)
+                })
             })
 
             // set up window close handler that will save the buffer and quit

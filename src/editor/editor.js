@@ -65,8 +65,6 @@ export class HeynoteEditor {
         this.active = active
         this.loadedBuffers = loadedBuffers
 
-        console.log(loadedBuffers);
-
         const state = EditorState.create({
             doc: (loadedBuffers[active] || ""),
             extensions: [
@@ -145,6 +143,7 @@ export class HeynoteEditor {
 
     setContent(bufferName, content) {
         this.active = bufferName
+        this.loadedBuffers[bufferName] = content
         this.view.dispatch({
             changes: {
                 from: 0,
@@ -245,6 +244,17 @@ export class HeynoteEditor {
             window.dispatchEvent(new Event("tabchange"))
             this.setContent(name, this.loadedBuffers[name])
         }
+    }
+
+    getNewName()
+    {
+        let bufferNum = 0
+
+        while(bufferNum in this.loadedBuffers) {
+            bufferNum += 1
+        }
+
+        return String(bufferNum)
     }
 }
 

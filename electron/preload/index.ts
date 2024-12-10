@@ -69,6 +69,10 @@ contextBridge.exposeInMainWorld("heynote", {
         async getAll() {
             return await ipcRenderer.invoke("buffer-content:all")
         },
+
+        async newBuffer(name) {
+            return await ipcRenderer.invoke("multibuffer:new", name)
+        }
     },
 
     settings: CONFIG.get("settings"),

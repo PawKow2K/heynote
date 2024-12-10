@@ -132,13 +132,18 @@ export function loadBuffers() {
     return buffers
 }
 
-ipcMain.handle('buffer-content:load', async (event, bufferName) => {
-    console.log("XD")
+async function loadBufferIfExists(bufferName)
+{
     if (buffers[bufferName].exists() && !(eraseInitialContent && isDev)) {
         return await buffers[bufferName].load()
     } else {
-        return isDev ? initialDevContent : initialContent
+        let content = isDev ? initialDevContent : initialContent
+        return [bufferName, content]
     }
+}
+
+ipcMain.handle('buffer-content:load', async (event, bufferName) => {
+    return await loadBufferIfExists(bufferName)
 });
 
 async function save(bufferName, content) {
@@ -183,4 +188,16 @@ ipcMain.handle("buffer-content:selectLocation", async () => {
 
 ipcMain.handle('buffer-content:all', async () => {
     return await Promise.all(Object.entries(buffers).map(async ([_, b]) => await b.load()))
+})
+
+ipcMain.handle('multibuffer:new', async (event, bufferName) => {
+    if (bufferName in buffers)
+    {
+        buffers[bufferName].close()
+    }
+    buffers[bufferName] = loadBuffer(bufferName)
+
+    let content = await loadBufferIfExists(bufferName)
+
+    buffers[bufferName].onChange(content[1])
 })
