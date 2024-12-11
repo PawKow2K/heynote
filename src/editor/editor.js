@@ -113,7 +113,7 @@ export class HeynoteEditor {
                 saveFunction(this.getContent())
             })
 
-            window.addEventListener("tabchange", () => {
+            window.addEventListener("savebuffer", () => {
                 this.loadedBuffers[this.active] = this.getContent()
                 saveFunction(this.getContent())
             })
@@ -142,6 +142,7 @@ export class HeynoteEditor {
     }
 
     setContent(bufferName, content) {
+        window.dispatchEvent(new Event("savebuffer"))
         this.active = bufferName
         this.loadedBuffers[bufferName] = content
         this.view.dispatch({
@@ -241,7 +242,7 @@ export class HeynoteEditor {
     changeBuffer(name) {
         if (name in this.loadedBuffers)
         {
-            window.dispatchEvent(new Event("tabchange"))
+            window.dispatchEvent(new Event("savebuffer"))
             this.setContent(name, this.loadedBuffers[name])
         }
     }

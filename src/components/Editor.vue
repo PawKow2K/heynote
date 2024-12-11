@@ -39,6 +39,7 @@
             return {
                 syntaxTreeDebugContent: null,
                 tabButtons: [],
+                active: '',
             }
         },
 
@@ -85,6 +86,9 @@
                     fontFamily: this.fontFamily,
                     fontSize: this.fontSize,
                 })
+
+                this.active = buffersList[0][0]
+
                 window._heynote_editor = this.editor
                 window.document.addEventListener("currenciesLoaded", this.onCurrenciesLoaded)
                 this.editor.setDefaultBlockLanguage(this.defaultBlockLanguage, this.defaultBlockLanguageAutoDetect)
@@ -95,10 +99,14 @@
                     {
                         this.tabButtons.push({
                             label: bufferName,
-                            action: () => this.editor.changeBuffer(bufferName)
+                            action: () => {
+                                this.editor.changeBuffer(bufferName)
+                                this.active = bufferName
+                            }
                         })
                     }
                     diskContent[bufferName] = content
+                    this.active = bufferName
                     this.editor.setContent(bufferName, content)
                 })
 
@@ -106,7 +114,10 @@
                 this.tabButtons = buffersList.map(([name, _]) =>
                     ({
                         label: name,
-                        action: () => this.editor.changeBuffer(name)
+                        action: () => {
+                            this.editor.changeBuffer(name)
+                            this.active = name
+                        }
                     })
                 )
 
@@ -216,6 +227,7 @@
         <div class="tabs" ref="tabs">
             <button
                 v-for="(button, index) in tabButtons"
+                :class="{activeBufferButton: button.label === active}"
                 :key="index"
                 @click="button.action"
             >
@@ -249,4 +261,7 @@
             padding-left: 20px
         > ul
             padding-left: 0
+        
+    .activeBufferButton
+        background-color: rgba(240, 240, 240, 0.85)
 </style>
